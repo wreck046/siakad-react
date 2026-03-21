@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSiswa } from "../services/siswaService";
+import { getSiswa, createSiswa, deleteSiswa } from "../services/siswaService";
 
 export default function SiswaPage() {
   const [siswa, setSiswa] = useState([]);
@@ -16,40 +16,38 @@ export default function SiswaPage() {
   }, []);
 
   const handleTambah = async () => {
-    await createSiswa({
-      nama,
-      nis,
-    });
+    await createSiswa({ nama, nis });
     setNama("");
     setNis("");
     loadData();
   };
 
-  const handleHapus = async (id) => {
+  const handleDelete = async (id) => {
     await deleteSiswa(id);
     loadData();
   };
 
   return (
-    <div className="p-5">
-      <h1 className="text-2xl font-bold mb-4">Data Siswa</h1>
+    <div className="min-h-screen bg-gray-100 p-6">
+      {/* Title */}
+      <h1 className="text-3xl font-bold mb-6 text-center">📚 Data Siswa</h1>
 
       {/* Form */}
-      <div className="mb-4">
+      <div className="bg-white p-4 rounded-xl shadow mb-6 flex gap-3 justify-center">
         <input
-          className="border p-2 mr-2"
+          className="border p-2 rounded w-48"
           placeholder="Nama"
           value={nama}
           onChange={(e) => setNama(e.target.value)}
         />
         <input
-          className="border p-2 mr-2"
+          className="border p-2 rounded w-32"
           placeholder="NIS"
           value={nis}
           onChange={(e) => setNis(e.target.value)}
         />
         <button
-          className="bg-blue-500 text-white px-4 py-2"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
           onClick={handleTambah}
         >
           Tambah
@@ -57,21 +55,26 @@ export default function SiswaPage() {
       </div>
 
       {/* List */}
-      <ul>
+      <div className="grid md:grid-cols-2 gap-4">
         {siswa.map((item) => (
-          <li key={item.id} className="border p-2 mb-2 flex justify-between">
-            <span>
-              {item.nama} - {item.nis}
-            </span>
+          <div
+            key={item.id}
+            className="bg-white p-4 rounded-xl shadow flex justify-between items-center"
+          >
+            <div>
+              <p className="font-semibold text-lg">{item.nama}</p>
+              <p className="text-gray-500 text-sm">{item.nis}</p>
+            </div>
+
             <button
-              className="bg-red-500 text-white px-2"
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
               onClick={() => handleDelete(item.id)}
             >
               Hapus
             </button>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
