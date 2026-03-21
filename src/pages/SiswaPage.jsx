@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
   getSiswa,
   createSiswa,
@@ -24,6 +25,9 @@ export default function SiswaPage() {
 
   const handleTambah = async () => {
     await createSiswa({ nama, nis });
+
+    toast.success("Siswa berhasil ditambahkan!");
+
     setNama("");
     setNis("");
     loadData();
@@ -31,6 +35,9 @@ export default function SiswaPage() {
 
   const handleDelete = async (id) => {
     await deleteSiswa(id);
+
+    toast.success("Siswa berhasil dihapus!");
+
     loadData();
   };
 
@@ -43,6 +50,8 @@ export default function SiswaPage() {
 
   const handleUpdate = async () => {
     await updateSiswa(selected.id, { nama, nis });
+
+    toast.success("Siswa berhasil diperbarui!");
 
     setIsEditOpen(false);
     setNama("");
