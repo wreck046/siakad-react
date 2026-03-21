@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { getSiswa, createSiswa, deleteSiswa } from "../services/siswaService";
+import {
+  getSiswa,
+  createSiswa,
+  deleteSiswa,
+  updateSiswa,
+} from "../services/siswaService";
 
 export default function SiswaPage() {
   const [siswa, setSiswa] = useState([]);
   const [nama, setNama] = useState("");
   const [nis, setNis] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const loadData = async () => {
     const res = await getSiswa();
@@ -24,6 +31,24 @@ export default function SiswaPage() {
 
   const handleDelete = async (id) => {
     await deleteSiswa(id);
+    loadData();
+  };
+
+  const handleEdit = (item) => {
+    setSelected(item);
+    setNama(item.nama);
+    setNis(item.nis);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    await updateSiswa(selected.id, { nama, nis });
+
+    setIsEditOpen(false);
+    setNama("");
+    setNis("");
+    setSelected(null);
+
     loadData();
   };
 
@@ -66,15 +91,60 @@ export default function SiswaPage() {
               <p className="text-gray-500 text-sm">{item.nis}</p>
             </div>
 
-            <button
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-              onClick={() => handleDelete(item.id)}
-            >
-              Hapus
-            </button>
+            <div className="flex gap-2">
+              <button
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                onClick={() => handleEdit(item)}
+              >
+                Edit
+              </button>
+
+              <button
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                onClick={() => handleDelete(item.id)}
+              >
+                Hapus
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Edit Modal */}
+      {isEditOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-xl shadow w-80">
+            <h2 className="text-xl font-bold mb-4">Edit Siswa</h2>
+
+            <input
+              className="border p-2 w-full mb-2"
+              value={nama}
+              onChange={(e) => setNama(e.target.value)}
+            />
+            <input
+              className="border p-2 w-full mb-4"
+              value={nis}
+              onChange={(e) => setNis(e.target.value)}
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                className="bg-gray-400 px-3 py-1 rounded"
+                onClick={() => setIsEditOpen(false)}
+              >
+                Batal
+              </button>
+
+              <button
+                className="bg-blue-500 text-white px-3 py-1 rounded"
+                onClick={handleUpdate}
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
