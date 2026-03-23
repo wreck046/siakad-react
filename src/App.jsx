@@ -3,11 +3,13 @@ import Dashboard from "./pages/Dashboard";
 import SiswaPage from "./pages/SiswaPage";
 
 function App() {
+  const isAuth = localStorage.getItem("token");
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/siswa" element={<SiswaPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={isAuth ? <Dashboard /> : <Login />} />
+        <Route path="/siswa" element={isAuth ? <SiswaPage /> : <Login />} />
       </Routes>
     </BrowserRouter>
   );
