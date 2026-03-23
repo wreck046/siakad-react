@@ -1,19 +1,15 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "./assets/vite.svg";
-import heroImg from "./assets/hero.png";
-import SiswaPage from "./pages/siswaPage";
-import { Toaster } from "react-hot-toast";
-import "./App.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import SiswaPage from "./pages/SiswaPage";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <>
-      <Toaster position="top-right" />
-      <SiswaPage />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/siswa" element={<SiswaPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
