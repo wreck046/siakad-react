@@ -24,6 +24,7 @@ export default function SiswaPage() {
   }, []);
 
   const handleTambah = async () => {
+    console.log("CLICKED");
     await createSiswa({ nama, nis });
 
     toast.success("Siswa berhasil ditambahkan!");
@@ -83,6 +84,7 @@ export default function SiswaPage() {
               onChange={(e) => setNis(e.target.value)}
             />
             <button
+              type="button"
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
               onClick={handleTambah}
             >

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getSiswa } from "../services/siswaService";
 
 export default function Dashboard() {
-  const totalSiswa = useState(0);
+  const [totalSiswa, setTotalSiswa] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +17,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
-      <h1 className="text-4xl font-bold mb-8">📊 Dashboard</h1>
+      <h1 className="text-4xl font-bold mb-8 text-black">📊 Dashboard</h1>
+
+      <h1 className="text-5xl text-red-500">TEST</h1>
 
       <button
         className="mt-4 bg-red-500 text-white px-4 py-2 rounded"

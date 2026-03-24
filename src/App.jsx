@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import SiswaPage from "./pages/SiswaPage";
 import Login from "./pages/Login";
+import MainLayout from "./layouts/MainLayout";
 
 function App() {
   const isAuth = localStorage.getItem("token");
@@ -15,12 +16,28 @@ function App() {
         {/* Protected routes */}
         <Route
           path="/"
-          element={isAuth ? <Dashboard /> : <Navigate to="/login" />}
+          element={
+            isAuth ? (
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
         />
 
         <Route
           path="/siswa"
-          element={isAuth ? <SiswaPage /> : <Navigate to="/login" />}
+          element={
+            isAuth ? (
+              <MainLayout>
+                <SiswaPage />
+              </MainLayout>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
         />
       </Routes>
     </BrowserRouter>
