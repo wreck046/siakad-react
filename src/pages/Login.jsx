@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function Login() {
-  const [usermame, setUsername] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
@@ -14,12 +14,14 @@ export default function Login() {
         username,
         password,
       });
-      localStorage.setItem("token", res.data.token);
-      toast.success("Login berhasil");
 
-      navigate("/");
+      localStorage.setItem("token", res.data.token);
+      toast.success("Login berhasil 🎉");
+
+      window.location.href = "/";
     } catch (err) {
-      toast.error("Login gagal");
+      console.error("LOGIN ERROR:", err);
+      toast.error("Login gagal ❌");
     }
   };
 
