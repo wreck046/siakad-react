@@ -1,8 +1,6 @@
-import axios from "axios";
+import api from "./api";
 
-const API_URL = "http://localhost:8080/api/siswa";
-
-export const getSiswa = () => axios.get(API_URL);
-export const createSiswa = (data) => axios.post(API_URL, data);
-export const updateSiswa = (id, data) => axios.put(`${API_URL}/${id}`, data);
-export const deleteSiswa = (id) => axios.delete(`${API_URL}/${id}`);
+export const getSiswa = () => api.get("/siswa");
+export const createSiswa = (data) => api.post("/siswa", data);
+export const updateSiswa = (id, data) => api.put(`/siswa/${id}`, data);
+export const deleteSiswa = (id) => api.delete(`/siswa/${id}`);
