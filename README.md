@@ -1,16 +1,51 @@
-# React + Vite
+# 📚 SIAKAD App (Fullstack)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fullstack academic management system built with React and Spring Boot.
 
-Currently, two official plugins are available:
+## 🌐 Live Demo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* Frontend: https://your-vercel-link.vercel.app
+* Backend: https://siakad-api.onrender.com
 
-## React Compiler
+## 🚀 Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* 🔐 Login Authentication (Token-based)
+* 👨‍🎓 Student Management (CRUD)
+* 📊 Dashboard with Chart
+* ⚡ Real-time UI update
+* ⏳ Loading feedback (UX enhancement)
 
-## Expanding the ESLint configuration
+## 🛠 Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Frontend
+
+* React (Vite)
+* Tailwind CSS
+* Axios
+
+### Backend
+
+* Spring Boot
+* REST API
+* H2 / MySQL
+
+### Deployment
+
+* Vercel (Frontend)
+* Render (Backend)
+
+## 🧠 Key Concepts
+
+* MVVM (Frontend)
+* MVC (Backend)
+* Axios Interceptor (Auth Handling)
+* Protected Routes
+* RESTful API Integration
+
+## 📌 Notes
+
+This project was built as a portfolio to demonstrate fullstack development skills.
+
+## 👨‍💻 Author
+
+Ivan Koroh
