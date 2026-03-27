@@ -25,7 +25,7 @@ export default function MainLayout({ children }) {
           className="mt-10 bg-red-500 text-white px-3 py-2 rounded hover:bg-red-200 text-white"
           onClick={() => {
             localStorage.removeItem("token");
-            window.location.href = "/login";
+            window.location.replace("/login");
           }}
         >
           Logout
