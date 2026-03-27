@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ClipLoader } from "react-spinners";
 import toast from "react-hot-toast";
 import {
   getSiswa,
@@ -8,6 +9,7 @@ import {
 } from "../services/siswaService";
 
 export default function SiswaPage() {
+  const [loading, setLoading] = useState(false);
   const [siswa, setSiswa] = useState([]);
   const [nama, setNama] = useState("");
   const [nis, setNis] = useState("");
@@ -24,42 +26,58 @@ export default function SiswaPage() {
   }, []);
 
   const handleTambah = async () => {
-    console.log("CLICKED");
-    await createSiswa({ nama, nis });
+    try {
+      setLoading(true);
+      await createSiswa({ nama, nis });
 
-    toast.success("Siswa berhasil ditambahkan!");
+      toast.success("Siswa berhasil ditambahkan!");
 
-    setNama("");
-    setNis("");
-    loadData();
+      setNama("");
+      setNis("");
+      loadData();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id) => {
-    await deleteSiswa(id);
+    try {
+      await deleteSiswa(id);
 
-    toast.success("Siswa berhasil dihapus!");
+      toast.success("Siswa berhasil dihapus!");
 
-    loadData();
+      loadData();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEdit = (item) => {
-    setSelected(item);
-    setNama(item.nama);
-    setNis(item.nis);
-    setIsEditOpen(true);
+    try {
+      setSelected(item);
+      setNama(item.nama);
+      setNis(item.nis);
+      setIsEditOpen(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdate = async () => {
-    await updateSiswa(selected.id, { nama, nis });
+    try {
+      await updateSiswa(selected.id, { nama, nis });
 
-    toast.success("Siswa berhasil diperbarui!");
+      toast.success("Siswa berhasil diperbarui!");
 
-    setIsEditOpen(false);
-    setNama("");
-    setNis("");
-    setSelected(null);
+      setIsEditOpen(false);
+      setNama("");
+      setNis("");
+      setSelected(null);
 
-    loadData();
+      loadData();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,8 +105,9 @@ export default function SiswaPage() {
               type="button"
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
               onClick={handleTambah}
+              disabled={loading}
             >
-              Tambah
+              {loading && <ClipLoader size={30} /> ? "Loading..." : "Tambah"}
             </button>
           </div>
 
@@ -108,15 +127,21 @@ export default function SiswaPage() {
                   <button
                     className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
                     onClick={() => handleEdit(item)}
+                    disabled={loading}
                   >
-                    Edit
+                    {loading && <ClipLoader size={30} />
+                      ? "Loading..."
+                      : "Edit"}
                   </button>
 
                   <button
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
                     onClick={() => handleDelete(item.id)}
+                    disabled={loading}
                   >
-                    Hapus
+                    {loading && <ClipLoader size={30} />
+                      ? "Loading..."
+                      : "Hapus"}
                   </button>
                 </div>
               </div>
