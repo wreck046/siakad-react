@@ -2,38 +2,28 @@ import { Link } from "react-router-dom";
 
 export default function MainLayout({ children }) {
   return (
-    <div className="flex min-h-screen bg-teal-100">
-      {/* Sidebar */}
-      <div className="w-64 bg-teal-500 p-4">
-        <h2 className="text-xl font-bold mb-6">📚 SIAKAD</h2>
+    <div className="w-64 bg-gray-900 text-white p-5 flex flex-col">
+      <h2 className="text-2xl font-bold mb-8">📚 SIAKAD</h2>
 
-        <nav className="flex flex-col gap-3">
-          <Link to="/" className="hover:bg-gray-200 p-2 rounded text-black">
-            Dashboard
-          </Link>
+      <nav className="flex flex-col gap-2">
+        <Link to="/" className="hover:bg-gray-700 p-2 rounded">
+          Dashboard
+        </Link>
 
-          <Link
-            to="/siswa"
-            className="hover:bg-gray-200 p-2 rounded text-black"
-          >
-            Data Siswa
-          </Link>
-        </nav>
+        <Link to="/siswa" className="hover:bg-gray-700 p-2 rounded">
+          Data Siswa
+        </Link>
+      </nav>
 
-        {/* Logout */}
-        <button
-          className="mt-10 bg-red-500 text-white px-3 py-2 rounded hover:bg-red-200 text-white"
-          onClick={() => {
-            localStorage.removeItem("token");
-            window.location.replace("/login");
-          }}
-        >
-          Logout
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-6">{children}</div>
+      <button
+        className="mt-auto bg-red-500 hover:bg-red-600 p-2 rounded"
+        onClick={() => {
+          localStorage.removeItem("token");
+          window.location.replace("/login");
+        }}
+      >
+        Logout
+      </button>
     </div>
   );
 }
