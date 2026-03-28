@@ -4,7 +4,7 @@ A fullstack academic management system built with React and Spring Boot.
 
 ## 🌐 Live Demo
 
-* Frontend: https://your-vercel-link.vercel.app
+* Frontend: (https://siakad-react-five.vercel.app/)
 * Backend: https://siakad-api.onrender.com
 
 ## 🚀 Features
