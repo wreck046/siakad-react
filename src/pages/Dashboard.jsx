@@ -39,7 +39,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl text-gray-900 font-bold mb-6">📊 Dashboard</h1>
+      <h1 className="text-3xl text-gray-500 font-bold mb-6">📊 Dashboard</h1>
 
       <div className="bg-white p-6 rounded-2xl shadow mb-6">
         <Bar data={data} />
@@ -47,17 +47,17 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-          <p className="text-gray-200 mb-2">Total Siswa</p>
+          <p className="text-gray-500 mb-2">Total Siswa</p>
           <h2 className="text-3xl text-gray-500 font-bold">{totalSiswa}</h2>
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-          <h2 className="text-gray-200 mb-2">Data Aktif</h2>
+          <h2 className="text-gray-500 mb-2">Data Aktif</h2>
           <p className="text-3xl font-bold text-green-500">Aktif</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-          <h2 className="text-gray-200 mb-2">Status</h2>
+          <h2 className="text-gray-500 mb-2">Status</h2>
           <p className="text-3xl font-bold text-blue-500">Online</p>
         </div>
       </div>
