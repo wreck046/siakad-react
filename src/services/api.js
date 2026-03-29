@@ -32,7 +32,7 @@ api.interceptors.response.use(
       localStorage.removeItem("token");
       window.location.replace("/auth/login");
     }
-
+    alert("Session expired, silakan login ulang");
     return Promise.reject(error);
   },
 );
