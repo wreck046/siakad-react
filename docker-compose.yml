@@ -1,0 +1,2 @@
+docker build -t siakad-react .
+docker run -p 3000:80 siakad-react

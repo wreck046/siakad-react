@@ -5,6 +5,11 @@ const api = axios.create({
   //baseURL: "http://localhost:8080/api",
 });
 
+//comment the above const and use the below const to continue develop
+// const api = axios.create({
+//   baseURL: import.meta.env.VITE_API_URL,
+// });
+
 // REQUEST → inject token
 api.interceptors.request.use(
   (config) => {
