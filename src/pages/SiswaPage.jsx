@@ -9,6 +9,8 @@ import {
 } from "../services/siswaService";
 
 export default function SiswaPage() {
+  //state management
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [siswa, setSiswa] = useState([]);
   const [nama, setNama] = useState("");
@@ -25,6 +27,13 @@ export default function SiswaPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      //trigger filter data siswa
+    }, 300);
+
+    return () => clearTimeout(delay);
+  }, [search]);
   const handleTambah = async () => {
     try {
       setLoading(true);
@@ -80,6 +89,10 @@ export default function SiswaPage() {
     }
   };
 
+  const filteredSiswa = siswa.filter((item) => {
+    item.nama.toLowerCase().includes(search.toLowerCase());
+  });
+
   return (
     <div className="min-h-screen bg-gray-100 p-6 flex justify-center">
       <div className="w-full max-w-4xl">
@@ -110,6 +123,15 @@ export default function SiswaPage() {
               {loading && <ClipLoader size={30} /> ? "Loading..." : "Tambah"}
             </button>
           </div>
+
+          {/* Search Student */}
+          <input
+            type="text"
+            placeholder="Ketikan nama siswa"
+            className="border p-2 rounded mb-4 w-full"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
           {/* List */}
           <div className="grid md:grid-cols-2 gap-4">
