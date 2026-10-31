@@ -1,0 +1,616 @@
+diff --git a/.env b/.env
+deleted file mode 100644
+index 03c095b..0000000
+--- a/.env
++++ /dev/null
+@@ -1 +0,0 @@
+-VITE_API_URL="http://host.docker.internal:8080/api"
+\ No newline at end of file
+diff --git a/.env.example b/.env.example
+new file mode 100644
+index 0000000..f0b61c2
+--- /dev/null
++++ b/.env.example
+@@ -0,0 +1,5 @@
++# URL backend (berakhiran /api).
++# Lokal : salin file ini menjadi .env (file .env tidak di-commit).
++# Vercel: isi di Settings → Environment Variables, lalu redeploy.
++VITE_API_URL=http://localhost:8080/api
++# Contoh produksi: VITE_API_URL=https://siakad-api.onrender.com/api
+diff --git a/.gitignore b/.gitignore
+index a547bf3..860f7c0 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -22,3 +22,6 @@ dist-ssr
+ *.njsproj
+ *.sln
+ *.sw?
++
++# Environment
++.env
+diff --git a/README.md b/README.md
+index 6684701..eca245b 100644
+--- a/README.md
++++ b/README.md
+@@ -27,13 +27,24 @@ A fullstack academic management system built with React and Spring Boot.
+ 
+ * Spring Boot
+ * REST API
+-* H2 / MySQL
++* H2 in-memory (data contoh dimuat otomatis saat startup)
+ 
+ ### Deployment
+ 
+ * Vercel (Frontend)
+ * Render (Backend)
+ 
++## ⚙️ Konfigurasi
++
++Frontend membaca URL backend dari `VITE_API_URL` (lihat `.env.example`).
++
++* Lokal: salin `.env.example` menjadi `.env`.
++* Vercel: isi di *Settings → Environment Variables* lalu redeploy
++  (variabel `VITE_*` ditanam saat build).
++
++Backend di Render (free tier) tidur setelah 15 menit tanpa traffic dan butuh sekitar
++satu menit untuk bangun. Database H2 in-memory direset setiap restart.
++
+ ## 🧠 Key Concepts
+ 
+ * MVVM (Frontend)
+diff --git a/docker-compose.yml b/docker-compose.yml
+deleted file mode 100644
+index 462bd86..0000000
+--- a/docker-compose.yml
++++ /dev/null
+@@ -1,2 +0,0 @@
+-docker build -t siakad-react .
+-docker run -p 3000:80 siakad-react
+diff --git a/src/App.jsx b/src/App.jsx
+index c285092..0afdb21 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -1,14 +1,26 @@
+ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
++import { Toaster } from "react-hot-toast";
+ import Dashboard from "./pages/Dashboard";
+ import SiswaPage from "./pages/SiswaPage";
+ import Login from "./pages/Login";
+ import MainLayout from "./layouts/MainLayout";
+ 
+-function App() {
++// Token dibaca setiap kali route dirender, bukan sekali saat App dimuat.
++function ProtectedRoute({ children }) {
+   const isAuth = localStorage.getItem("token");
+ 
++  return isAuth ? (
++    <MainLayout>{children}</MainLayout>
++  ) : (
++    <Navigate to="/login" replace />
++  );
++}
++
++function App() {
+   return (
+     <BrowserRouter>
++      <Toaster position="top-right" />
++
+       <Routes>
+         {/* Login route */}
+         <Route path="/login" element={<Login />} />
+@@ -17,28 +29,23 @@ function App() {
+         <Route
+           path="/"
+           element={
+-            isAuth ? (
+-              <MainLayout>
+-                <Dashboard />
+-              </MainLayout>
+-            ) : (
+-              <Navigate to="/login" />
+-            )
++            <ProtectedRoute>
++              <Dashboard />
++            </ProtectedRoute>
+           }
+         />
+ 
+         <Route
+           path="/siswa"
+           element={
+-            isAuth ? (
+-              <MainLayout>
+-                <SiswaPage />
+-              </MainLayout>
+-            ) : (
+-              <Navigate to="/login" />
+-            )
++            <ProtectedRoute>
++              <SiswaPage />
++            </ProtectedRoute>
+           }
+         />
++
++        {/* Path yang tidak dikenal */}
++        <Route path="*" element={<Navigate to="/" replace />} />
+       </Routes>
+     </BrowserRouter>
+   );
+diff --git a/src/pages/Dashboard.jsx b/src/pages/Dashboard.jsx
+index b35d6a7..85c28d2 100644
+--- a/src/pages/Dashboard.jsx
++++ b/src/pages/Dashboard.jsx
+@@ -33,8 +33,13 @@ export default function Dashboard() {
+   }, []);
+ 
+   const loadData = async () => {
+-    const res = await getSiswa();
+-    setTotalSiswa(res.data.length);
++    try {
++      const res = await getSiswa();
++      setTotalSiswa(res.data.length);
++    } catch (err) {
++      // Error jaringan / 401 sudah ditangani interceptor.
++      console.error("Gagal memuat data dashboard:", err);
++    }
+   };
+ 
+   return (
+diff --git a/src/pages/Login.jsx b/src/pages/Login.jsx
+index 284dbd1..761864a 100644
+--- a/src/pages/Login.jsx
++++ b/src/pages/Login.jsx
+@@ -1,4 +1,4 @@
+-import { useState } from "react";
++import { useEffect, useState } from "react";
+ import api from "../services/api";
+ import { useNavigate } from "react-router-dom";
+ import toast from "react-hot-toast";
+@@ -10,7 +10,16 @@ export default function Login() {
+   const [password, setPassword] = useState("");
+   const navigate = useNavigate();
+ 
+-  const handleLogin = async () => {
++  // Dialihkan dari interceptor saat token kedaluwarsa.
++  useEffect(() => {
++    if (new URLSearchParams(window.location.search).has("expired")) {
++      toast.error("Sesi berakhir, silakan login ulang", { id: "expired" });
++    }
++  }, []);
++
++  const handleLogin = async (e) => {
++    e.preventDefault();
++
+     try {
+       setLoading(true);
+ 
+@@ -22,10 +31,16 @@ export default function Login() {
+       localStorage.setItem("token", res.data.token);
+       toast.success("Login berhasil 🎉");
+ 
+-      window.location.href = "/";
++      navigate("/", { replace: true });
+     } catch (err) {
+       console.error("LOGIN ERROR:", err);
+-      toast.error("Login gagal ❌");
++
++      // Error jaringan sudah ditampilkan oleh interceptor.
++      if (err.response?.status === 401) {
++        toast.error("Username atau password salah ❌");
++      } else if (err.response) {
++        toast.error("Login gagal ❌");
++      }
+     } finally {
+       setLoading(false);
+     }
+@@ -33,12 +48,16 @@ export default function Login() {
+ 
+   return (
+     <div className="min-h-screen flex justify-center items-center bg-gray-100">
+-      <div className="bg-white p-6 rounded-xl shadow w-80">
++      <form
++        onSubmit={handleLogin}
++        className="bg-white p-6 rounded-xl shadow w-80"
++      >
+         <h1 className="text-xl font-bold mb-4 text-center">Login</h1>
+ 
+         <input
+           className="border p-2 w-full mb-2"
+           placeholder="Username"
++          value={username}
+           onChange={(e) => setUsername(e.target.value)}
+         />
+ 
+@@ -46,17 +65,18 @@ export default function Login() {
+           type="password"
+           className="border p-2 w-full mb-4"
+           placeholder="Password"
++          value={password}
+           onChange={(e) => setPassword(e.target.value)}
+         />
+ 
+         <button
+-          className="bg-blue-500 text-white w-full py-2 rounded"
+-          onClick={handleLogin}
++          type="submit"
++          className="bg-blue-500 text-white w-full py-2 rounded flex justify-center items-center disabled:opacity-60"
+           disabled={loading}
+         >
+-          {loading && <ClipLoader size={30} /> ? "Loading..." : "Login"}
++          {loading ? <ClipLoader size={20} color="#ffffff" /> : "Login"}
+         </button>
+-      </div>
++      </form>
+     </div>
+   );
+ }
+diff --git a/src/pages/SiswaPage.jsx b/src/pages/SiswaPage.jsx
+index 15fa118..021841a 100644
+--- a/src/pages/SiswaPage.jsx
++++ b/src/pages/SiswaPage.jsx
+@@ -16,82 +16,107 @@ export default function SiswaPage() {
+   const [nama, setNama] = useState("");
+   const [nis, setNis] = useState("");
+   const [selected, setSelected] = useState(null);
++  const [editNama, setEditNama] = useState("");
++  const [editNis, setEditNis] = useState("");
+   const [isEditOpen, setIsEditOpen] = useState(false);
+ 
+   const loadData = async () => {
+-    const res = await getSiswa();
+-    setSiswa(res.data);
++    try {
++      const res = await getSiswa();
++      setSiswa(res.data);
++    } catch (err) {
++      // Error jaringan / 401 sudah ditangani interceptor.
++      console.error("Gagal memuat data siswa:", err);
++    }
+   };
+ 
+   useEffect(() => {
+     loadData();
+   }, []);
+ 
+-  useEffect(() => {
+-    const delay = setTimeout(() => {
+-      //trigger filter data siswa
+-    }, 300);
+-
+-    return () => clearTimeout(delay);
+-  }, [search]);
+   const handleTambah = async () => {
++    if (!nama.trim() || !nis.trim()) {
++      toast.error("Nama dan NIS wajib diisi");
++      return;
++    }
++
+     try {
+       setLoading(true);
+-      await createSiswa({ nama, nis });
++      await createSiswa({ nama: nama.trim(), nis: nis.trim() });
+ 
+       toast.success("Siswa berhasil ditambahkan!");
+ 
+       setNama("");
+       setNis("");
+-      loadData();
++      await loadData();
++    } catch (err) {
++      if (err.response) toast.error("Gagal menambahkan siswa");
+     } finally {
+       setLoading(false);
+     }
+   };
+ 
+   const handleDelete = async (id) => {
++    if (!window.confirm("Hapus siswa ini?")) return;
++
+     try {
++      setLoading(true);
+       await deleteSiswa(id);
+ 
+       toast.success("Siswa berhasil dihapus!");
+ 
+-      loadData();
++      await loadData();
++    } catch (err) {
++      if (err.response) toast.error("Gagal menghapus siswa");
+     } finally {
+       setLoading(false);
+     }
+   };
+ 
+   const handleEdit = (item) => {
+-    try {
+-      setSelected(item);
+-      setNama(item.nama);
+-      setNis(item.nis);
+-      setIsEditOpen(true);
+-    } finally {
+-      setLoading(false);
+-    }
++    setSelected(item);
++    setEditNama(item.nama);
++    setEditNis(item.nis);
++    setIsEditOpen(true);
++  };
++
++  const closeEdit = () => {
++    setIsEditOpen(false);
++    setSelected(null);
++    setEditNama("");
++    setEditNis("");
+   };
+ 
+   const handleUpdate = async () => {
++    if (!editNama.trim() || !editNis.trim()) {
++      toast.error("Nama dan NIS wajib diisi");
++      return;
++    }
++
+     try {
+-      await updateSiswa(selected.id, { nama, nis });
++      setLoading(true);
++      await updateSiswa(selected.id, {
++        nama: editNama.trim(),
++        nis: editNis.trim(),
++      });
+ 
+       toast.success("Siswa berhasil diperbarui!");
+ 
+-      setIsEditOpen(false);
+-      setNama("");
+-      setNis("");
+-      setSelected(null);
+-
+-      loadData();
++      closeEdit();
++      await loadData();
++    } catch (err) {
++      if (err.response) toast.error("Gagal memperbarui siswa");
+     } finally {
+       setLoading(false);
+     }
+   };
+ 
+-  const filteredSiswa = siswa.filter((item) => {
+-    item.nama.toLowerCase().includes(search.toLowerCase());
+-  });
++  const keyword = search.trim().toLowerCase();
++  const filteredSiswa = siswa.filter(
++    (item) =>
++      item.nama?.toLowerCase().includes(keyword) ||
++      item.nis?.toLowerCase().includes(keyword),
++  );
+ 
+   return (
+     <div className="min-h-screen bg-gray-100 p-6 flex justify-center">
+@@ -116,90 +141,99 @@ export default function SiswaPage() {
+             />
+             <button
+               type="button"
+-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
++              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center min-w-24 disabled:opacity-60"
+               onClick={handleTambah}
+               disabled={loading}
+             >
+-              {loading && <ClipLoader size={30} /> ? "Loading..." : "Tambah"}
++              {loading ? <ClipLoader size={18} color="#ffffff" /> : "Tambah"}
+             </button>
+           </div>
+ 
+           {/* Search Student */}
+           <input
+             type="text"
+-            placeholder="Ketikan nama siswa"
++            placeholder="Cari nama atau NIS"
+             className="border p-2 rounded mb-4 w-full"
+             value={search}
+             onChange={(e) => setSearch(e.target.value)}
+           />
+ 
+           {/* List */}
+-          <div className="grid md:grid-cols-2 gap-4">
+-            {siswa.map((item) => (
+-              <div
+-                key={item.id}
+-                className="bg-white p-4 rounded-xl shadow flex justify-between items-center"
+-              >
+-                <div>
+-                  <p className="font-semibold text-lg">{item.nama}</p>
+-                  <p className="text-gray-500 text-sm">{item.nis}</p>
+-                </div>
+-
+-                <div className="flex gap-2">
+-                  <button
+-                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+-                    onClick={() => handleEdit(item)}
+-                    disabled={loading}
+-                  >
+-                    {loading && <ClipLoader size={30} />
+-                      ? "Loading..."
+-                      : "Edit"}
+-                  </button>
+-
+-                  <button
+-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+-                    onClick={() => handleDelete(item.id)}
+-                    disabled={loading}
+-                  >
+-                    {loading && <ClipLoader size={30} />
+-                      ? "Loading..."
+-                      : "Hapus"}
+-                  </button>
++          {filteredSiswa.length === 0 ? (
++            <p className="text-center text-gray-500">
++              {siswa.length === 0
++                ? "Belum ada data siswa."
++                : "Tidak ada siswa yang cocok."}
++            </p>
++          ) : (
++            <div className="grid md:grid-cols-2 gap-4">
++              {filteredSiswa.map((item) => (
++                <div
++                  key={item.id}
++                  className="bg-white p-4 rounded-xl shadow flex justify-between items-center"
++                >
++                  <div>
++                    <p className="font-semibold text-lg">{item.nama}</p>
++                    <p className="text-gray-500 text-sm">{item.nis}</p>
++                  </div>
++
++                  <div className="flex gap-2">
++                    <button
++                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded disabled:opacity-60"
++                      onClick={() => handleEdit(item)}
++                      disabled={loading}
++                    >
++                      Edit
++                    </button>
++
++                    <button
++                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:opacity-60"
++                      onClick={() => handleDelete(item.id)}
++                      disabled={loading}
++                    >
++                      Hapus
++                    </button>
++                  </div>
+                 </div>
+-              </div>
+-            ))}
+-          </div>
++              ))}
++            </div>
++          )}
+ 
+           {/* Edit Modal */}
+           {isEditOpen && (
+-            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
++            <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+               <div className="bg-white p-6 rounded-xl shadow w-80">
+                 <h2 className="text-xl font-bold mb-4">Edit Siswa</h2>
+ 
+                 <input
+                   className="border p-2 w-full mb-2"
+-                  value={nama}
+-                  onChange={(e) => setNama(e.target.value)}
++                  value={editNama}
++                  onChange={(e) => setEditNama(e.target.value)}
+                 />
+                 <input
+                   className="border p-2 w-full mb-4"
+-                  value={nis}
+-                  onChange={(e) => setNis(e.target.value)}
++                  value={editNis}
++                  onChange={(e) => setEditNis(e.target.value)}
+                 />
+ 
+                 <div className="flex justify-end gap-2">
+                   <button
+                     className="bg-gray-400 px-3 py-1 rounded"
+-                    onClick={() => setIsEditOpen(false)}
++                    onClick={closeEdit}
+                   >
+                     Batal
+                   </button>
+ 
+                   <button
+-                    className="bg-blue-500 text-white px-3 py-1 rounded"
++                    className="bg-blue-500 text-white px-3 py-1 rounded flex items-center justify-center min-w-20 disabled:opacity-60"
+                     onClick={handleUpdate}
++                    disabled={loading}
+                   >
+-                    Simpan
++                    {loading ? (
++                      <ClipLoader size={16} color="#ffffff" />
++                    ) : (
++                      "Simpan"
++                    )}
+                   </button>
+                 </div>
+               </div>
+diff --git a/src/services/api.js b/src/services/api.js
+index 724a1e2..495f72c 100644
+--- a/src/services/api.js
++++ b/src/services/api.js
+@@ -1,15 +1,14 @@
+ import axios from "axios";
++import toast from "react-hot-toast";
+ 
++// URL backend dibaca dari environment saat build:
++//   - Vercel : Settings → Environment Variables → VITE_API_URL (contoh: https://siakad-api.onrender.com/api)
++//   - Lokal  : salin .env.example menjadi .env
++// Variabel VITE_* ditanam ke bundle saat build, jadi mengubahnya butuh redeploy.
+ const api = axios.create({
+-  baseURL: "https://siakad-api.onrender.com/api",
+-  //baseURL: "http://localhost:8080/api",
++  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8080/api",
+ });
+ 
+-//comment the above const and use the below const to continue develop
+-// const api = axios.create({
+-//   baseURL: import.meta.env.VITE_API_URL,
+-// });
+-
+ // REQUEST → inject token
+ api.interceptors.request.use(
+   (config) => {
+@@ -24,15 +23,25 @@ api.interceptors.request.use(
+   (error) => Promise.reject(error),
+ );
+ 
+-// RESPONSE → handle 401
++// RESPONSE → handle 401 dan error jaringan
+ api.interceptors.response.use(
+   (response) => response,
+   (error) => {
+-    if (error.response && error.response.status === 401) {
++    const status = error.response?.status;
++    const isLoginRequest = error.config?.url?.includes("/auth/login");
++
++    if (status === 401 && !isLoginRequest) {
++      // Token tidak valid / kedaluwarsa: hapus lalu kembali ke halaman login.
+       localStorage.removeItem("token");
+-      window.location.replace("/auth/login");
++      window.location.replace("/login?expired=1");
++    } else if (!error.response) {
++      // Tidak ada respons: server mati, sedang bangun dari tidur, atau diblokir CORS.
++      toast.error(
++        "Server tidak bisa dihubungi. Server gratis butuh sekitar 1 menit untuk bangun, coba lagi sebentar.",
++        { id: "network-error" },
++      );
+     }
+-    alert("Session expired, silakan login ulang");
++
+     return Promise.reject(error);
+   },
+ );
+diff --git a/vercel.json b/vercel.json
+index 11a7a5f..0f32683 100644
+--- a/vercel.json
++++ b/vercel.json
+@@ -1,21 +1,3 @@
+ {
+-  "builds": [
+-    {
+-      "src": "package.json",
+-      "use": "@vercel/static-build",
+-      "config": {
+-        "distDir": "dist"
+-      }
+-    }
+-  ],
+-  "routes": [
+-    {
+-      "src": "/assets/(.*)",
+-      "dest": "/assets/$1"
+-    },
+-    {
+-      "src": "/(.*)",
+-      "dest": "/index.html"
+-    }
+-  ]
++  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+ }

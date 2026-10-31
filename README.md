@@ -27,12 +27,23 @@ A fullstack academic management system built with React and Spring Boot.
 
 * Spring Boot
 * REST API
-* H2 / MySQL
+* H2 in-memory (data contoh dimuat otomatis saat startup)
 
 ### Deployment
 
 * Vercel (Frontend)
 * Render (Backend)
+
+## ⚙️ Konfigurasi
+
+Frontend membaca URL backend dari `VITE_API_URL` (lihat `.env.example`).
+
+* Lokal: salin `.env.example` menjadi `.env`.
+* Vercel: isi di *Settings → Environment Variables* lalu redeploy
+  (variabel `VITE_*` ditanam saat build).
+
+Backend di Render (free tier) tidur setelah 15 menit tanpa traffic dan butuh sekitar
+satu menit untuk bangun. Database H2 in-memory direset setiap restart.
 
 ## 🧠 Key Concepts
 

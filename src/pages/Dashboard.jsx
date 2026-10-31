@@ -33,8 +33,13 @@ export default function Dashboard() {
   }, []);
 
   const loadData = async () => {
-    const res = await getSiswa();
-    setTotalSiswa(res.data.length);
+    try {
+      const res = await getSiswa();
+      setTotalSiswa(res.data.length);
+    } catch (err) {
+      // Error jaringan / 401 sudah ditangani interceptor.
+      console.error("Gagal memuat data dashboard:", err);
+    }
   };
 
   return (
